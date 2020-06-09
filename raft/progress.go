@@ -34,8 +34,17 @@ func (st ProgressStateType) String() string { return prstmap[uint64(st)] }
 
 // Progress represents a follower’s progress in the view of the leader. Leader maintains
 // progresses of all followers, and sends entries to the follower based on its progress.
+// leader节点通过progress结构体来追踪一个follower的状态，并根据progress里面的信息来决定每次同步的日志项。
+/*
+	需要关注的字段属性： match, next, state, ins
+*/
 type Progress struct {
+	//match: 保存目前为止，已复制给该follower的日志的最高索引值。
+	//next：保存下一次leader发送append消息给该follower的日志索引，即下一次复制日志时，leader会从next开始发送日志
+	//正常情况下，next = match + 1
 	Match, Next uint64
+
+
 	// State defines how the leader should interact with the follower.
 	//
 	// When in ProgressStateProbe, leader sends at most one replication message
@@ -47,6 +56,7 @@ type Progress struct {
 	//
 	// When in ProgressStateSnapshot, leader should have sent out snapshot
 	// before and stops sending any replication message.
+	// 保存该节点当前的同步状态（progressStateProbe）
 	State ProgressStateType
 
 	// Paused is used in ProgressStateProbe.
@@ -76,7 +86,7 @@ type Progress struct {
 	// When a leader receives a reply, the previous inflights should
 	// be freed by calling inflights.freeTo with the index of the last
 	// received entry.
-	ins *inflights
+	ins *inflights //流量控制
 
 	// IsLearner is true if this progress is tracked for a learner.
 	IsLearner bool

@@ -31,11 +31,13 @@ type raftLog struct {
 
 	// committed is the highest log position that is known to be in
 	// stable storage on a quorum of nodes.
-	committed uint64
+	committed uint64 //保存当前提交的日志数据索引
 	// applied is the highest log position that the application has
 	// been instructed to apply to its state machine.
 	// Invariant: applied <= committed
-	applied uint64
+	applied uint64 //保存当前传入状态机的数据最高索引
+
+	//一条日志数据，在节点中首先需要被commit成功之后，才能被应用到状态机中。因为以下不等式一直成功：applied <= committed
 
 	logger Logger
 }
@@ -50,11 +52,11 @@ func newLog(storage Storage, logger Logger) *raftLog {
 		storage: storage,
 		logger:  logger,
 	}
-	firstIndex, err := storage.FirstIndex()
+	firstIndex, err := storage.FirstIndex() //返回MemoryStorage的第一个索引位置的entries对象
 	if err != nil {
 		panic(err) // TODO(bdarnell)
 	}
-	lastIndex, err := storage.LastIndex()
+	lastIndex, err := storage.LastIndex() //返回MemoryStorage的最后一个索引位置的entries对象信息
 	if err != nil {
 		panic(err) // TODO(bdarnell)
 	}

@@ -753,9 +753,9 @@ func (r *raft) poll(id uint64, t pb.MessageType, v bool) (granted int) {
 func (r *raft) Step(m pb.Message) error {
 	// Handle the message term, which may result in our stepping down to a follower.
 	switch {
-	case m.Term == 0:
-		// local message
-	case m.Term > r.Term:
+	case m.Term == 0: //如果选举任期为0
+		// local message //本地message
+	case m.Term > r.Term: //如果message消息发出时raft整体集群的选举任期大于raft集群的任期
 		if m.Type == pb.MsgVote || m.Type == pb.MsgPreVote {
 			force := bytes.Equal(m.Context, []byte(campaignTransfer))
 			inLease := r.checkQuorum && r.lead != None && r.electionElapsed < r.electionTimeout

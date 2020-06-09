@@ -201,10 +201,13 @@ func (ConfChangeType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_b042552c306ae59b, []int{2}
 }
 
+// 一个集群中的每个节点都是一个状态机，而raft管理的就是对这个状态机进行更改的一些操作，这些操作在代码中被封装为一个个entry
 type Entry struct {
 	Term                 uint64    `protobuf:"varint,2,opt,name=Term" json:"Term"`
 	Index                uint64    `protobuf:"varint,3,opt,name=Index" json:"Index"`
+	//enery类型，目前etcd支持两种类型：entryNormal（entry对状态机的操作）和EntryConfChange（代表对当前集群配置进行更改的操作）
 	Type                 EntryType `protobuf:"varint,1,opt,name=Type,enum=raftpb.EntryType" json:"Type"`
+	//entry真正要执行的操作
 	Data                 []byte    `protobuf:"bytes,4,opt,name=Data" json:"Data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
@@ -327,18 +330,24 @@ func (m *Snapshot) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Snapshot proto.InternalMessageInfo
 
+//raft集群中各个节点之间的通讯内容
 type Message struct {
 	Type                 MessageType `protobuf:"varint,1,opt,name=type,enum=raftpb.MessageType" json:"type"`
 	To                   uint64      `protobuf:"varint,2,opt,name=to" json:"to"`
 	From                 uint64      `protobuf:"varint,3,opt,name=from" json:"from"`
 	Term                 uint64      `protobuf:"varint,4,opt,name=term" json:"term"`
+	//消息发出者所保存的日志中最后一条的任期号
 	LogTerm              uint64      `protobuf:"varint,5,opt,name=logTerm" json:"logTerm"`
+	//日志索引号
 	Index                uint64      `protobuf:"varint,6,opt,name=index" json:"index"`
 	Entries              []Entry     `protobuf:"bytes,7,rep,name=entries" json:"entries"`
 	Commit               uint64      `protobuf:"varint,8,opt,name=commit" json:"commit"`
 	Snapshot             Snapshot    `protobuf:"bytes,9,opt,name=snapshot" json:"snapshot"`
 	Reject               bool        `protobuf:"varint,10,opt,name=reject" json:"reject"`
+	//投票拒绝原因
 	RejectHint           uint64      `protobuf:"varint,11,opt,name=rejectHint" json:"rejectHint"`
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
 	Context              []byte      `protobuf:"bytes,12,opt,name=context" json:"context,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`

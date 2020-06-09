@@ -20,12 +20,14 @@ import pb "github.com/coreos/etcd/raft/raftpb"
 // Note that unstable.offset may be less than the highest log
 // position in storage; this means that the next write to storage
 // might need to truncate the log before persisting unstable.entries.
+// 该结构体用于还没有被用户层持久化的数据，它维护了两部分内容：snapshot和entries
 type unstable struct {
 	// the incoming unstable snapshot, if any.
-	snapshot *pb.Snapshot
+	snapshot *pb.Snapshot //当集群中有新的follower加入进来之后，如果entries日志被清空的话，就需要snapshot快照来给新的
+	// follower节点所有之前entries日志应用后的结果，之后的日志以这个snapshot为基础进行应用，就可以进行状态同步了。
 	// all entries that have not yet been written to storage.
-	entries []pb.Entry
-	offset  uint64
+	entries []pb.Entry //代表要进行操作的日志，但日志不能无限增长，在特定的情况下，某些过期的日志会被清空。
+	offset  uint64 //保存的内容是entries数组中的第一条数据在raft日志中的索引。
 
 	logger Logger
 }
